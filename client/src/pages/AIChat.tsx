@@ -1,14 +1,14 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Loader2, Send, MessageCircle } from "lucide-react";
+import { Loader2, Send, MessageCircle, ArrowLeft } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { Streamdown } from "streamdown";
+import { useLocation } from "wouter";
 
 export default function AIChat() {
-  const { user, isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Array<{ role: string; content: string }>>([]);
   const [input, setInput] = useState("");
@@ -24,18 +24,20 @@ export default function AIChat() {
 
   // Initialize conversation on mount
   useEffect(() => {
-    if (isAuthenticated && !conversationId) {
+    if (!conversationId) {
       createConvMutation.mutate(
         { title: "Portfolio Chat" },
         {
           onSuccess: (result) => {
-            const insertId = (result as any).insertId;
-            setConversationId(insertId);
+            const insertId = (result as any)[0]?.id;
+            if (insertId) {
+              setConversationId(insertId);
+            }
           },
         }
       );
     }
-  }, [isAuthenticated, conversationId]);
+  }, []);
 
   // Load messages when conversation changes
   useEffect(() => {
@@ -81,26 +83,23 @@ export default function AIChat() {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <Card className="p-8 text-center max-w-md">
-          <MessageCircle className="w-12 h-12 mx-auto mb-4 text-blue-500" />
-          <h1 className="text-2xl font-bold mb-2">AI Portfolio Chat</h1>
-          <p className="text-gray-600 mb-6">Sign in to chat with Sujit about his experience and projects.</p>
-          <Button className="w-full">Sign In</Button>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-slate-900">Ask About Sujit</h1>
-          <p className="text-sm text-slate-600">Chat with an AI assistant about his expertise and projects</p>
+        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Ask About Sujit</h1>
+            <p className="text-sm text-slate-600">Chat with an AI assistant about his expertise and projects</p>
+          </div>
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
         </div>
       </div>
 

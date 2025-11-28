@@ -1,9 +1,9 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { createConversation, getConversationsByUserId, getMessagesByConversationId, addMessage, getPortfolioContent } from "./db";
+import { createConversation, getMessagesByConversationId, addMessage, getPortfolioContent } from "./db";
 import { invokeLLM } from "./_core/llm";
 
 export const appRouter = router({
@@ -20,26 +20,22 @@ export const appRouter = router({
   }),
 
   chat: router({
-    createConversation: protectedProcedure
+    createConversation: publicProcedure
       .input(z.object({ title: z.string().optional() }))
-      .mutation(async ({ ctx, input }) => {
+      .mutation(async ({ input }) => {
         const title = input.title || "New Conversation";
-        return createConversation(ctx.user.id, title);
+        // Use a fixed userId (1) for public conversations since we're not tracking users
+        return createConversation(1, title);
       }),
     
-    getConversations: protectedProcedure
-      .query(async ({ ctx }) => {
-        return getConversationsByUserId(ctx.user.id);
-      }),
-    
-    getMessages: protectedProcedure
+    getMessages: publicProcedure
       .input(z.object({ conversationId: z.number() }))
       .query(async ({ input }) => {
         return getMessagesByConversationId(input.conversationId);
       }),
     
-    sendMessage: protectedProcedure
-      .input(z.object({ conversationId: z.number(), message: z.string() }))
+    sendMessage: publicProcedure
+      .input(z.object({ conversationId: z.number(), message: z.string().min(1, "Message cannot be empty") }))
       .mutation(async ({ input }) => {
         const { conversationId, message } = input;
         

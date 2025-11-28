@@ -1,19 +1,12 @@
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { MessageCircle, Zap, Brain, Code, Users, TrendingUp } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function Landing() {
-  const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
 
   const handleChatClick = () => {
-    if (isAuthenticated) {
-      navigate("/chat");
-    } else {
-      window.location.href = getLoginUrl();
-    }
+    navigate("/chat");
   };
 
   return (
@@ -25,15 +18,9 @@ export default function Landing() {
             <Brain className="w-8 h-8 text-blue-400" />
             <span className="text-xl font-bold text-white">Sujit's AI Portfolio</span>
           </div>
-          {isAuthenticated ? (
-            <Button onClick={() => navigate("/chat")} className="bg-blue-600 hover:bg-blue-700">
-              Open Chat
-            </Button>
-          ) : (
-            <Button onClick={() => (window.location.href = getLoginUrl())} className="bg-blue-600 hover:bg-blue-700">
-              Sign In
-            </Button>
-          )}
+          <Button onClick={handleChatClick} className="bg-blue-600 hover:bg-blue-700">
+            Open Chat
+          </Button>
         </div>
       </nav>
 
