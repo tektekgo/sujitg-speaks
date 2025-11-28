@@ -1,7 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { InsertUser, users, conversations, messages, portfolioContent } from "../drizzle/schema";
+import { InsertUser, users, conversations, messages, portfolioContent, talks, events, bookingInquiries, testimonials, InsertTalk, InsertBookingInquiry, InsertTestimonial } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -137,4 +137,77 @@ export async function getPortfolioContentBySection(section: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   return db.select().from(portfolioContent).where(eq(portfolioContent.section, section)).orderBy(portfolioContent.order);
+}
+
+// Talks queries
+export async function getAllTalks() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(talks).orderBy(talks.order);
+}
+
+export async function getTalkById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(talks).where(eq(talks.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createTalk(talk: InsertTalk) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(talks).values(talk).returning();
+}
+
+// Events queries
+export async function getAllEvents() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(events).orderBy(desc(events.date));
+}
+
+export async function getEventById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(events).where(eq(events.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+// Booking inquiries queries
+export async function createBookingInquiry(inquiry: InsertBookingInquiry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(bookingInquiries).values(inquiry).returning();
+}
+
+export async function getAllBookingInquiries() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(bookingInquiries).orderBy(desc(bookingInquiries.createdAt));
+}
+
+export async function getBookingInquiryById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.select().from(bookingInquiries).where(eq(bookingInquiries.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateBookingInquiryStatus(id: number, status: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.update(bookingInquiries).set({ status, updatedAt: new Date() }).where(eq(bookingInquiries.id, id)).returning();
+}
+
+// Testimonials queries
+export async function getAllTestimonials() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(testimonials).orderBy(testimonials.order);
+}
+
+export async function createTestimonial(testimonial: InsertTestimonial) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.insert(testimonials).values(testimonial).returning();
 }

@@ -3,7 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
-import { createConversation, getMessagesByConversationId, addMessage, getPortfolioContent } from "./db";
+import { createConversation, getMessagesByConversationId, addMessage, getPortfolioContent, getAllTalks, getTalkById, getAllEvents, createBookingInquiry, getAllBookingInquiries, updateBookingInquiryStatus, getAllTestimonials } from "./db";
 import { invokeLLM } from "./_core/llm";
 
 export const appRouter = router({
@@ -44,6 +44,10 @@ export const appRouter = router({
         const portfolioData = await getPortfolioContent();
         const portfolioContext = portfolioData.map(p => `${p.section}: ${p.title} - ${p.content}`).join("\n\n");
         
+        // Get talks data for speaking context
+        const talksData = await getAllTalks();
+        const talksContext = talksData.map(t => `Talk: ${t.title} - ${t.subtitle}\nAbstract: ${t.abstract}\nKey Takeaways: ${t.keyTakeaways}\nAudience Fit: ${t.audienceFit}`).join("\n\n");
+        
         const conversationHistory = await getMessagesByConversationId(conversationId);
         const messages = conversationHistory.map(m => ({
           role: m.role as "user" | "assistant",
@@ -51,10 +55,15 @@ export const appRouter = router({
         }));
         messages.push({ role: "user", content: message });
         
-        const systemPrompt = `You are an AI assistant representing Sujit Gangadharan, a CIO Candidate and Enterprise Technology Executive with 30+ years of experience. You have access to his portfolio information and should answer questions about his background, expertise, projects, and experience. Be professional, knowledgeable, and helpful.
+        const systemPrompt = `You are an AI assistant representing Sujit Gangadharan, a VP of DevOps & Infrastructure Automation and professional speaker with 30+ years of enterprise technology experience. You specialize in helping organizers find the right talk for their event and answering questions about Sujit's speaking expertise, background, and professional experience.
 
-Portfolio Information:
-${portfolioContext}`;
+Speaking Expertise:
+${talksContext}
+
+Professional Background:
+${portfolioContext}
+
+When asked about booking, speaking engagements, or event planning, provide helpful guidance based on Sujit's talks and experience. Be professional, knowledgeable, and enthusiastic about speaking opportunities.`;
         
         const response = await invokeLLM({
           messages: [
@@ -69,6 +78,74 @@ ${portfolioContext}`;
         
         return { success: true, message: assistantMessage };
       }),
+  }),
+
+  talks: router({
+    list: publicProcedure.query(async () => {
+      return getAllTalks();
+    }),
+    
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return getTalkById(input.id);
+      }),
+  }),
+
+  events: router({
+    list: publicProcedure.query(async () => {
+      return getAllEvents();
+    }),
+  }),
+
+  booking: router({
+    submit: publicProcedure
+      .input(z.object({
+        eventName: z.string().min(1, "Event name is required"),
+        date: z.string().min(1, "Date is required"),
+        format: z.enum(["keynote", "talk", "panel", "workshop"]),
+        audience: z.string().min(1, "Audience description is required"),
+        budget: z.string().optional(),
+        contactEmail: z.string().email("Valid email is required"),
+        contactName: z.string().optional(),
+        message: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const result = await createBookingInquiry({
+          eventName: input.eventName,
+          date: input.date,
+          format: input.format,
+          audience: input.audience,
+          budget: input.budget,
+          contactEmail: input.contactEmail,
+          contactName: input.contactName,
+          message: input.message,
+          status: "pending",
+        });
+        return { success: true, inquiryId: result[0]?.id };
+      }),
+    
+    list: publicProcedure.query(async () => {
+      return getAllBookingInquiries();
+    }),
+    
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        return getAllBookingInquiries(); // Return all for now (no auth)
+      }),
+    
+    updateStatus: publicProcedure
+      .input(z.object({ id: z.number(), status: z.enum(["pending", "confirmed", "declined"]) }))
+      .mutation(async ({ input }) => {
+        return updateBookingInquiryStatus(input.id, input.status);
+      }),
+  }),
+
+  testimonials: router({
+    list: publicProcedure.query(async () => {
+      return getAllTestimonials();
+    }),
   }),
 });
 
