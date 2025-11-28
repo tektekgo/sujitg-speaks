@@ -1,5 +1,6 @@
 import { desc, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { InsertUser, users, conversations, messages, portfolioContent } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -9,7 +10,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(process.env.DATABASE_URL);
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -68,9 +70,14 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
+    // PostgreSQL: Use ON CONFLICT for upsert
+    await db
+      .insert(users)
+      .values(values)
+      .onConflictDoUpdate({
+        target: users.openId,
+        set: updateSet,
+      });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
     throw error;
@@ -92,7 +99,7 @@ export async function getUserByOpenId(openId: string) {
 export async function createConversation(userId: number, title: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(conversations).values({ userId, title });
+  return db.insert(conversations).values({ userId, title }).returning();
 }
 
 export async function getConversationsByUserId(userId: number) {
@@ -111,7 +118,7 @@ export async function getConversationById(conversationId: number) {
 export async function addMessage(conversationId: number, role: "user" | "assistant", content: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(messages).values({ conversationId, role, content });
+  return db.insert(messages).values({ conversationId, role, content }).returning();
 }
 
 export async function getMessagesByConversationId(conversationId: number) {

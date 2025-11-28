@@ -1,4 +1,4 @@
-import mysql from 'mysql2/promise';
+import postgres from 'postgres';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -127,20 +127,21 @@ const portfolioData = [
 ];
 
 async function seedPortfolio() {
+  const sql = postgres(process.env.DATABASE_URL);
+  
   try {
-    const connection = await mysql.createConnection(process.env.DATABASE_URL);
-    
     console.log("Connected to database. Seeding portfolio content...");
     
     for (const item of portfolioData) {
-      await connection.execute(
-        "INSERT INTO portfolioContent (section, title, content, `order`) VALUES (?, ?, ?, ?)",
-        [item.section, item.title, item.content, item.order]
-      );
+      await sql`
+        INSERT INTO "portfolioContent" (section, title, content, "order")
+        VALUES (${item.section}, ${item.title}, ${item.content}, ${item.order})
+        ON CONFLICT DO NOTHING
+      `;
     }
     
     console.log(`✓ Successfully seeded ${portfolioData.length} portfolio items`);
-    await connection.end();
+    await sql.end();
   } catch (error) {
     console.error("Error seeding portfolio:", error);
     process.exit(1);

@@ -48,3 +48,11 @@
 - [x] Update frontend to remove login UI
 - [x] Allow public access to chat interface
 - [x] Test public chat functionality
+
+## Phase 9: Migrate to Vercel Postgres
+- [x] Update schema from MySQL to PostgreSQL
+- [x] Update ORM configuration
+- [x] Update seed script
+- [x] Install postgres driver
+- [x] Update drizzle config
+- [ ] Test migrations on Vercel
