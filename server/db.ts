@@ -96,10 +96,16 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function createConversation(userId: number, title: string) {
+export async function createConversation(userIdOrSessionId: number | string, title: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.insert(conversations).values({ userId, title }).returning();
+  
+  // If it's a number, treat as userId; if string, treat as sessionId
+  const values = typeof userIdOrSessionId === 'number' 
+    ? { userId: userIdOrSessionId, title }
+    : { sessionId: userIdOrSessionId, title };
+  
+  return db.insert(conversations).values(values).returning();
 }
 
 export async function getConversationsByUserId(userId: number) {

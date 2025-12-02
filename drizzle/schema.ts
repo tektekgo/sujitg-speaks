@@ -31,7 +31,8 @@ export type InsertUser = typeof users.$inferInsert;
 
 export const conversations = pgTable("conversations", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  userId: integer("userId").notNull(),
+  userId: integer("userId"), // Optional for public/anonymous chats
+  sessionId: varchar("sessionId", { length: 255 }), // For tracking public sessions
   title: varchar("title", { length: 255 }).default("New Conversation").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull(),
@@ -39,6 +40,7 @@ export const conversations = pgTable("conversations", {
 
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
+// For public chats, either userId OR sessionId will be set, but not both
 
 export const messages = pgTable("messages", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
