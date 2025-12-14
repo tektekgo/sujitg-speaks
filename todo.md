@@ -40,12 +40,12 @@
 - [ ] Create inquiry status management (pending, confirmed, declined)
 
 ## Phase 6: AI Chat Enhancement
-- [ ] Update system prompt to focus on speaking expertise
-- [ ] Include talk abstracts and speaking experience in AI context
-- [ ] Add speaking-specific suggested questions
-- [ ] Include booking guidelines in AI training
-- [ ] Test AI responses for speaking-focused queries
-- [ ] Add "Ask about my talks" feature to chat
+- [x] Update system prompt to focus on speaking expertise
+- [x] Include talk abstracts and speaking experience in AI context
+- [x] Add speaking-specific suggested questions
+- [x] Include booking guidelines in AI training
+- [x] Test AI responses for speaking-focused queries
+- [x] Add "Ask about my talks" feature to chat
 
 ## Phase 7: Video & Media Integration (Later)
 - [ ] Create video clips section with placeholders
@@ -73,13 +73,13 @@
 - [ ] Accessibility audit
 
 ## Phase 10: Deployment
-- [ ] Push code to GitHub (tektekgo/sujitg-speaks)
-- [ ] Deploy to Vercel
-- [ ] Configure environment variables (OpenRouter API key)
-- [ ] Set up PostgreSQL database on Vercel
-- [ ] Verify all functionality on live site
-- [ ] Configure speak.sujitg.com domain (Cloudflare DNS)
-- [ ] Test live site with custom domain
+- [x] Push code to GitHub (tektekgo/sujitg-speaks)
+- [x] Deploy to Vercel
+- [x] Configure environment variables (OpenRouter API key)
+- [x] Set up PostgreSQL database on Vercel
+- [x] Verify all functionality on live site
+- [x] Configure speak.sujitg.com domain (Cloudflare DNS)
+- [x] Test live site with custom domain
 
 ## Future Enhancements
 - [ ] Resend email integration (confirmation + notification emails)
